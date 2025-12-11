@@ -146,31 +146,44 @@ Vercel adalah platform yang sangat mudah untuk deploy Flutter web apps.
    - Buka [vercel.com](https://vercel.com)
    - Klik "New Project"
    - Import repository GitHub Anda
-   - Configure build settings:
-     - **Build Command:** `flutter build web --release`
-     - **Output Directory:** `build/web`
-     - **Install Command:** `flutter pub get`
+   - Vercel akan otomatis detect `vercel.json` yang sudah ada di project
+   - **PENTING**: Pastikan file `vercel.json` sudah ada di root project
 
-3. **Add Environment Variables**
-   - Di Vercel dashboard, masuk ke Project Settings > Environment Variables
-   - Tambahkan:
-     - `SUPABASE_URL`
-     - `SUPABASE_ANON_KEY`
+3. **Add Environment Variables (WAJIB!)**
+   - Di Vercel dashboard, masuk ke **Project Settings** > **Environment Variables**
+   - Tambahkan environment variables berikut:
+     - **Name:** `SUPABASE_URL`
+       **Value:** `https://your-project-id.supabase.co`
+       **Environment:** Production, Preview, Development (centang semua)
+     
+     - **Name:** `SUPABASE_ANON_KEY`
+       **Value:** `your-anon-key-here`
+       **Environment:** Production, Preview, Development (centang semua)
+   
+   **Cara mendapatkan credentials:**
+   - Login ke [Supabase Dashboard](https://app.supabase.com)
+   - Pilih project Anda
+   - Buka **Settings** > **API**
+   - Copy **Project URL** dan **anon/public key**
 
 4. **Deploy**
    - Klik "Deploy"
-   - Vercel akan otomatis build dan deploy
+   - Vercel akan otomatis:
+     1. Install Flutter SDK
+     2. Run `flutter pub get`
+     3. Build dengan environment variables: `flutter build web --release --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...`
+     4. Deploy folder `build/web`
 
 ### **Konfigurasi untuk Flutter Web**
 
-Buat file `vercel.json` di root:
+File `vercel.json` sudah dibuat di root project dengan konfigurasi yang benar:
 
 ```json
 {
   "version": 2,
-  "buildCommand": "flutter build web --release",
+  "buildCommand": "flutter pub get && flutter build web --release --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY",
   "outputDirectory": "build/web",
-  "installCommand": "flutter pub get",
+  "installCommand": "curl -L https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.7.2-stable.tar.xz | tar xJ && export PATH=\"$PATH:`pwd`/flutter/bin\" && flutter doctor && flutter pub get",
   "framework": null,
   "rewrites": [
     {
@@ -200,6 +213,18 @@ Buat file `vercel.json` di root:
   ]
 }
 ```
+
+**Penjelasan:**
+- `buildCommand`: Build Flutter web dengan environment variables dari Vercel
+- `outputDirectory`: Folder output build (`build/web`)
+- `installCommand`: Install Flutter SDK dan dependencies
+- `rewrites`: Redirect semua route ke `index.html` (untuk Flutter routing)
+- `headers`: Cache control untuk optimasi performa
+
+**⚠️ PENTING:**
+1. Pastikan environment variables `SUPABASE_URL` dan `SUPABASE_ANON_KEY` sudah ditambahkan di Vercel dashboard
+2. Build command menggunakan `--dart-define` untuk pass environment variables ke Flutter
+3. Vercel akan otomatis download Flutter SDK saat build (ini akan memakan waktu beberapa menit)
 
 ---
 
@@ -481,12 +506,48 @@ GitHub Pages adalah pilihan gratis untuk hosting static sites.
 
 ## 🔐 Konfigurasi Environment Variables
 
-### **Untuk Vercel**
+### **Untuk Vercel (WAJIB DILAKUKAN!)**
 
-1. Masuk ke Project Settings > Environment Variables
-2. Tambahkan:
-   - `SUPABASE_URL` = `https://your-project.supabase.co`
-   - `SUPABASE_ANON_KEY` = `your-anon-key`
+**Langkah-langkah:**
+
+1. **Masuk ke Vercel Dashboard**
+   - Buka [vercel.com](https://vercel.com)
+   - Login ke akun Anda
+   - Pilih project SIGAP Anda
+
+2. **Tambah Environment Variables**
+   - Klik **Settings** di menu project
+   - Klik **Environment Variables** di sidebar
+   - Klik **Add New** untuk menambah variable baru
+
+3. **Tambahkan SUPABASE_URL**
+   - **Name:** `SUPABASE_URL`
+   - **Value:** `https://your-project-id.supabase.co` (ganti dengan URL Supabase Anda)
+   - **Environment:** Centang semua (Production, Preview, Development)
+   - Klik **Save**
+
+4. **Tambahkan SUPABASE_ANON_KEY**
+   - **Name:** `SUPABASE_ANON_KEY`
+   - **Value:** `your-anon-key-here` (ganti dengan anon key Supabase Anda)
+   - **Environment:** Centang semua (Production, Preview, Development)
+   - Klik **Save**
+
+5. **Redeploy Setelah Menambah Variables**
+   - Setelah menambah environment variables, klik **Deployments**
+   - Klik menu (3 dots) pada deployment terbaru
+   - Pilih **Redeploy** untuk rebuild dengan environment variables baru
+
+**Cara Mendapatkan Credentials:**
+- Login ke [Supabase Dashboard](https://app.supabase.com)
+- Pilih project Anda
+- Buka **Settings** (icon gear) > **API**
+- Copy **Project URL** → ini adalah `SUPABASE_URL`
+- Copy **anon/public key** → ini adalah `SUPABASE_ANON_KEY`
+
+**⚠️ PENTING:**
+- Jangan commit credentials ke repository!
+- Environment variables di Vercel hanya bisa diakses saat build time
+- Pastikan environment variables sudah ditambahkan sebelum deploy pertama kali
 
 ### **Untuk Netlify**
 
@@ -498,31 +559,45 @@ GitHub Pages adalah pilihan gratis untuk hosting static sites.
 1. Masuk ke Firebase Console > Project Settings
 2. Tambahkan di Config atau gunakan Firebase Functions untuk handle secrets
 
-### **Update Code untuk Environment Variables**
+### **Setup Environment Variables untuk Development**
 
-Buat file `lib/core/config.dart`:
+1. Copy file `.env.example` ke `.env`:
+   ```bash
+   cp .env.example .env
+   ```
 
-```dart
-class AppConfig {
-  // Get from environment variables atau fallback ke hardcoded
-  static String get supabaseUrl {
-    return const String.fromEnvironment(
-      'SUPABASE_URL',
-      defaultValue: 'https://sympxicqwhkwmgqunjfm.supabase.co',
-    );
-  }
-  
-  static String get supabaseAnonKey {
-    return const String.fromEnvironment(
-      'SUPABASE_ANON_KEY',
-      defaultValue: 'your-default-key',
-    );
-  }
-}
+2. Edit file `.env` dan isi dengan credentials Supabase Anda:
+   ```env
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_ANON_KEY=your-anon-key
+   ```
+
+3. File `.env` sudah ada di `.gitignore`, jadi tidak akan ter-commit.
+
+### **Build dengan Environment Variables (Production)**
+
+Untuk production build, gunakan compile-time environment variables:
+
+```bash
+# Flutter build dengan environment variables
+flutter build web --release \
+  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=your-anon-key
 ```
 
-Update `lib/main.dart`:
+Atau untuk Android/iOS:
+```bash
+flutter build apk --release \
+  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=your-anon-key
+```
 
+**Note**: Code sudah di-update untuk menggunakan `AppConfig` dari `lib/core/config.dart` yang membaca dari:
+1. `.env` file (untuk development)
+2. Compile-time environment variables (untuk production)
+3. Fallback ke empty string dengan error message yang jelas
+
+Update `lib/main.dart` sudah dilakukan:
 ```dart
 await SupabaseService.initialize(
   supabaseUrl: AppConfig.supabaseUrl,

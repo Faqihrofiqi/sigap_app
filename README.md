@@ -52,6 +52,27 @@ cd sigap_app
 flutter pub get
 ```
 
+### 3. Setup Environment Variables
+
+1. Copy file `.env.example` ke `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit file `.env` dan isi dengan credentials Supabase Anda:
+   ```env
+   SUPABASE_URL=https://your-project-id.supabase.co
+   SUPABASE_ANON_KEY=your-anon-key-here
+   ```
+
+   **Cara mendapatkan credentials:**
+   - Login ke [Supabase Dashboard](https://app.supabase.com)
+   - Pilih project Anda
+   - Buka **Settings** > **API**
+   - Copy **Project URL** dan **anon/public key**
+
+3. **PENTING**: File `.env` sudah ada di `.gitignore` dan tidak akan ter-commit ke repository untuk keamanan.
+
 ### 3. Setup Supabase
 
 #### a. Buat Project di Supabase
@@ -65,13 +86,18 @@ flutter pub get
 3. Jalankan query untuk membuat tabel dan fungsi
 
 #### c. Konfigurasi Flutter App
-1. Buka file `lib/main.dart`
-2. Ganti `YOUR_SUPABASE_URL` dan `YOUR_SUPABASE_ANON_KEY` dengan credentials Anda:
+1. Copy file `.env.example` ke `.env` (jika belum):
+   ```bash
+   cp .env.example .env
+   ```
 
-```dart
-const supabaseUrl = 'https://your-project.supabase.co';
-const supabaseAnonKey = 'your-anon-key-here';
-```
+2. Edit file `.env` dan isi dengan credentials dari step 3.a:
+   ```env
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_ANON_KEY=your-anon-key-here
+   ```
+
+3. **PENTING**: File `.env` sudah ada di `.gitignore` dan tidak akan ter-commit ke repository untuk keamanan.
 
 ### 4. Setup Permissions
 

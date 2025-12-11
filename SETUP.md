@@ -40,17 +40,25 @@ flutter pub get
 
 ## Step 3: Konfigurasi Flutter App
 
-### 3.1 Update Credentials
-1. Buka file `lib/main.dart`
-2. Cari baris ini:
-```dart
-const supabaseUrl = 'YOUR_SUPABASE_URL';
-const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
-```
-3. Ganti dengan credentials dari Step 2.2:
-```dart
-const supabaseUrl = 'https://xxxxx.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+### 3.1 Setup Environment Variables
+1. Copy file `.env.example` ke `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Atau buat file `.env` baru di root project.
+
+2. Buka file `.env` dan isi dengan credentials dari Step 2.2:
+   ```env
+   SUPABASE_URL=https://xxxxx.supabase.co
+   SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   ```
+
+3. **PENTING**: File `.env` sudah ada di `.gitignore`, jadi tidak akan ter-commit ke repository. Ini untuk keamanan.
+
+### 3.2 Install Dependencies
+```bash
+flutter pub get
 ```
 
 ## Step 4: Buat User Admin Pertama

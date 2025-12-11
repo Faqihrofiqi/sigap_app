@@ -1,26 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/supabase_client.dart';
 import 'core/app_theme.dart';
 import 'core/session_manager.dart';
+import 'core/config.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Supabase
-  // TODO: Replace with your Supabase credentials
-  // You can get these from your Supabase project settings
-  const supabaseUrl = 'https://sympxicqwhkwmgqunjfm.supabase.co';
-  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5bXB4aWNxd2hrd21ncXVuamZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNjc4MzYsImV4cCI6MjA4MDY0MzgzNn0.DM0XRoJJ61CHHRIqN9Jlm7ZjhgnOvHYwGoSswh9Lmh8';
+  // Load environment variables from .env file
+  try {
+    await dotenv.load(fileName: '.env');
+    if (kDebugMode) {
+      print('✅ Environment variables loaded from .env file');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('⚠️ Could not load .env file: $e');
+      print('   Using compile-time environment variables or defaults');
+    }
+  }
   
-  // Check if credentials are configured
-  if (supabaseUrl.isNotEmpty && 
-      supabaseAnonKey.isNotEmpty && 
-      supabaseUrl != 'YOUR_SUPABASE_URL' && 
-      supabaseAnonKey != 'YOUR_SUPABASE_ANON_KEY') {
+  // Initialize Supabase using environment variables
+  final supabaseUrl = AppConfig.supabaseUrl;
+  final supabaseAnonKey = AppConfig.supabaseAnonKey;
+  
+  // Validate configuration
+  if (!AppConfig.isValid) {
+    final error = AppConfig.validationError;
+    if (kDebugMode) {
+      print('❌ ERROR: Supabase configuration is invalid!');
+      print('   $error');
+      print('');
+      print('📝 Setup Instructions:');
+      print('   1. Copy .env.example to .env');
+      print('   2. Update .env with your Supabase credentials');
+      print('   3. Get credentials from: https://app.supabase.com/project/_/settings/api');
+    }
+    // Still run the app, but Supabase won't work
+    // User will see error when trying to login
+  } else {
     try {
       await SupabaseService.initialize(
         supabaseUrl: supabaseUrl,
@@ -33,11 +56,6 @@ void main() async {
       if (kDebugMode) {
         print('❌ Error initializing Supabase: $e');
       }
-    }
-  } else {
-    if (kDebugMode) {
-      print('⚠️ WARNING: Supabase credentials not configured!');
-      print('Please update lib/main.dart with your Supabase URL and Anon Key');
     }
   }
   
